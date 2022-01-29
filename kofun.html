@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>kofun</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: black;
+}
+canvas {
+  display: block;
+}
+#camrobo {
+  position: fixed;
+  bottom: 2em;
+  right: 2em;
+  width: 20vw;
+}
+</style>
+</head>
+<body>
+
+  <!--
+<img id=camrobo src=camrobo.png>
+
+  -->
+
+<script type="module">
+import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
+import { OrbitControls } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
+import { VRMLLoader } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/VRMLLoader.js";
+
+onload = async () => {
+  const canvas = document.createElement("canvas");
+  document.body.appendChild(canvas);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const scene = new THREE.Scene();
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  renderer.setPixelRatio(1);
+  renderer.setSize(width, height);
+  renderer.outputEncoding = THREE.sRGBEncoding; // 色補正
+
+  // VRモード対応
+/*  document.body.appendChild(VRButton.createButton(renderer));
+  renderer.xr.enabled = true;
+*/
+  const camera = new THREE.PerspectiveCamera(45, width / height, 1, 100);
+  camera.position.set(0, 3, 5);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; // カメラコントローラーを滑らかに
+  controls.dampingFactor = 0.2;
+
+  const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
+  scene.add(light);
+
+  const loader = new VRMLLoader();
+  // made & export by Chokoku CAD https://github.com/itta611/ChokokuCAD
+  //const urlcar = "./06909C_0.wrl";
+  const urlcar = "./06910C_0.wrl";
+  loader.load(urlcar, (o) => {
+    scene.add(o);
+  });
+
+
+  // キーでロボットカー操作
+  let dz = 0;
+  let ry = 0;
+  document.onkeydown = (e) => {
+    if (e.key == "ArrowUp") {
+      dz = 1;
+      ry = 0;
+    } else if (e.key == "ArrowDown") {
+      dz = -1;
+      ry = 0;
+    } else if (e.key == "ArrowRight") {
+      dz = 0;
+      ry = -1;
+    } else if (e.key == "ArrowLeft") {
+      dz = 0;
+      ry = 1;
+    } else if (e.key == " ") {
+      dz = 0;
+      ry = 0;
+    }
+  };
+
+  renderer.setAnimationLoop(() => {
+    controls.update();
+
+    /*
+    car.rotation.y += ry / 100;
+    const d = dz / 50;
+    const th = Math.PI / 2 - car.rotation.y;
+    car.position.z += Math.sin(th) * d;
+    car.position.x += Math.cos(th) * d;
+
+    camera.lookAt(car.position);
+    */
+    renderer.render(scene, camera);
+  });
+};
+</script>
+</body>
+</html>

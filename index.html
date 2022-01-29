@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<body>
+<style>
+body {
+  margin: 0;
+}
+canvas {
+  display: block;
+  height: 100vh;
+}
+</style>
+<script type="module">
+import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
+
+onload = async () => {
+  const canvas = document.createElement("canvas");
+  document.body.appendChild(canvas);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const scene = new THREE.Scene();
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  
+  const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
+  scene.add(light);
+  const light2 = new THREE.DirectionalLight(0xFFFFFF, 1);
+  scene.add(light2);
+
+//Geometryを作成
+let geometry = new THREE.BufferGeometry();
+
+const aspect = 1;
+//頂点座標
+let vertices = new Float32Array([
+    -1.0 * aspect, 1.0, 0.0,
+    1.0 * aspect, 1.0, 0.0, 
+    -1.0 * aspect, -1.0, 0.0,
+    1.0 * aspect, -1.0, 0.0
+
+]);
+
+//頂点インデックス
+let index = new Uint32Array([
+    0, 2, 1,
+    1, 2, 3
+]);
+
+//頂点座標
+geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+//頂点のつなげ順
+geometry.setIndex(new THREE.BufferAttribute(index, 1));
+
+/*
+//マテリアルを設定。シェーダーファイルや、uniform変数を指定
+let material = new THREE.ShaderMaterial({
+    //uniforms: uniforms,
+    vertexShader: myVert,
+    fragmentShader: myFrag
+});
+
+let mesh = new THREE.Mesh(geometry); //, material);
+scene.add(mesh);
+*/ 
+//ワイヤーフレームのメッシュ作成
+var wire = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+var wireMesh = new THREE.Mesh(geometry, wire);
+scene.add(wireMesh);
+
+{
+// ドーナツを作成
+const geometry = new THREE.TorusGeometry(300, 100, 64, 100);
+// マテリアルを作成
+const material = new THREE.MeshBasicMaterial({color: 0x6699FF});
+// メッシュを作成
+const mesh = new THREE.Mesh(geometry, material);
+// 3D空間にメッシュを追加
+scene.add(mesh);
+}
+  //renderer.render(scene, camera);
+};
+
+</script>
+</html>

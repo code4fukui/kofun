@@ -1,0 +1,202 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<style>
+body {
+margin: 0;
+}
+canvas {
+display: block;
+height: 100vh;
+}
+</style>
+<script type="module">
+import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
+import { OrbitControls } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js";
+
+const addTestMesh = (scene) => {
+  const geometry = new THREE.BufferGeometry();
+
+  const aspect = 1;
+  //頂点座標
+  let vertices = new Float32Array([
+      -1.0 * aspect, 1.0, 0.0,
+      1.0 * aspect, 1.0, 0.0, 
+      -1.0 * aspect, -1.0, 0.0,
+      1.0 * aspect, -1.0, 0.0
+  ]);
+
+  //頂点インデックス
+  let index = new Uint32Array([
+      0, 2, 1,
+      1, 2, 3
+  ]);
+
+  //頂点座標
+  geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  //頂点のつなげ順
+  geometry.setIndex(new THREE.BufferAttribute(index, 1));
+
+  /*
+  //マテリアルを設定。シェーダーファイルや、uniform変数を指定
+  let material = new THREE.ShaderMaterial({
+      //uniforms: uniforms,
+      vertexShader: myVert,
+      fragmentShader: myFrag
+  });
+
+  let mesh = new THREE.Mesh(geometry); //, material);
+  scene.add(mesh);
+  */ 
+  //ワイヤーフレームのメッシュ作成
+  var wire = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+  //var wireMesh = new THREE.Mesh(geometry, wire);
+  const std = new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.0 })
+  var wireMesh = new THREE.Mesh(geometry, std);
+  scene.add(wireMesh);
+};
+
+const loadVRML1 = async (scene, url) => {
+  const ratio = .5;
+
+  const data = await (await fetch(url)).text();
+  console.log(data);
+  const ss = data.split("\n").map(s => s.trim()).filter(s => s[0] != "#");
+  let lv = 0;
+  let pnt, color;
+  for (let i = 0; i < ss.length; i++) {
+    const s = ss[i];
+    if (s.startsWith("Separator {")) {
+      lv++;
+    } else if (s.startsWith("Material {")) {
+      const n = ss[++i].split(/\s/).map(s => parseInt(s.trim()));
+      color = (n[0] << 16) | (n[1] << 8) | n[2];
+    } else if (s.startsWith("Coordinate3 {")) {
+      pnt = [];
+      for (i += 2;; i++) { // skip point
+        const s = ss[i];
+        if (s == "]") {
+          break;
+        }
+        const p = s.substring(0, s.length - 1).split(" ").map(p => parseFloat(p) * ratio);
+        pnt.push(p[0]);
+        pnt.push(p[2]);
+        pnt.push(p[1]);
+        console.log(p);
+      }
+    } else if (s.startsWith("IndexedFaceSet {")) {
+      for (i += 2;; i++) { // skip coordIndex
+        const s = ss[i];
+        if (s == "]") {
+          break;
+        }
+        const face = s.substring(0, s.length - 4).split(",").map(p => parseInt(p));
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pnt), 3));
+        if (face.length > 3) {
+          const face2 = [];
+          for (let i = 0; i < face.length; i++) {
+            face2.push(face[i]);
+            face2.push(face[i + 1]);
+            face2.push(face[i + 2]);
+          }
+          geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(face2), 1));
+          //alert(JSON.stringify(face) + " <- " + JSON.stringify(face2))
+          //return;
+        } else {
+          geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(face), 1));
+        }
+        const color = 0xff0000;
+        //const material = new THREE.MeshStandardMaterial({ color, roughness: 0.0 })
+        const material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+        //const material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+      }
+      //return;
+    }
+  }
+};
+
+onload = async () => {
+  const canvas = document.createElement("canvas");
+  document.body.appendChild(canvas);
+
+  // レンダラーを作成
+  const renderer = new THREE.WebGLRenderer({ canvas });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  renderer.setSize(width, height);
+
+  // シーンを作成
+  const scene = new THREE.Scene();
+
+  // カメラを作成
+  const camera = new THREE.PerspectiveCamera(45, width / height);
+  camera.position.set(20, 20, 20);
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; // カメラコントローラーを滑らかに
+  controls.dampingFactor = 0.2;
+
+  // 床を作成
+  /*
+  const meshFloor = new THREE.Mesh(
+    new THREE.BoxGeometry(2000, -500, 2000),
+    new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.0 })
+  );
+  scene.add(meshFloor);
+  */
+
+  //addTestMesh(scene);
+  await loadVRML1(scene, "06909C_0.wrl");
+  //await loadVRML1(scene, "06910C_0.wrl");
+
+  const light0 = new THREE.AmbientLight(0xFFFFFF, 1.0);
+  scene.add(light0);
+
+  // 平行光源を作成
+  // new THREE.DirectionalLight(色, 光の強さ)
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  scene.add(light);
+
+  // 照明を可視化するヘルパー
+  const lightHelper = new THREE.DirectionalLightHelper(light);
+  scene.add(lightHelper);
+
+  /*
+  const tick = () => {
+    renderer.render(scene, camera);
+
+    // 照明の位置を更新
+    const t = Date.now() / 500;
+    const r = 10.0;
+    const lx = r * Math.cos(t);
+    const lz = r * Math.sin(t);
+    const ly = 6.0 + 5.0 * Math.sin(t / 3.0);
+    light.position.set(lx, ly, lz);
+    lightHelper.update();
+
+    requestAnimationFrame(tick);
+  };
+  tick();
+  */
+  renderer.setAnimationLoop(() => {
+    controls.update();
+    /*
+    car.rotation.y += ry / 100;
+    const d = dz / 50;
+    const th = Math.PI / 2 - car.rotation.y;
+    car.position.z += Math.sin(th) * d;
+    car.position.x += Math.cos(th) * d;
+    camera.lookAt(car.position);
+    */
+
+    renderer.render(scene, camera);
+  });
+};
+</script>
+</head>
+<body>
+</body>
+</html>
