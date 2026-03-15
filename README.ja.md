@@ -1,6 +1,6 @@
 # kofun
 
-kofunは、三次元表示による三大墳墓の比較を行うリポジトリです。
+kofunは、三次元表示による三大墳墓の比較を行うプロジェクトです。
 
 ## デモ
 [ワイヤーフレーム表示](https://code4fukui.github.io/kofun/test.html)

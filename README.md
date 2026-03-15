@@ -1,5 +1,7 @@
 # kofun
 
+> 日本語のREADMEはこちらです: [README.ja.md](README.ja.md)
+
 This project displays 3D visualizations of major ancient tombs in Sakai City, Japan.
 
 ## Demo
