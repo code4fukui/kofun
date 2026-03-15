@@ -1,5 +1,12 @@
 # kofun
- 
-- [ワイヤーフレーム表示](https://code4fukui.github.io/kofun/test.html)
-- DATA: [三次元表示による三大墳墓の比較　堺市](https://www.city.sakai.lg.jp/kanko/rekishi/dkofun/3dhikaku/funbohikaku.html)
 
+This project displays 3D visualizations of major ancient tombs in Sakai City, Japan.
+
+## Demo
+[Wireframe Display](https://code4fukui.github.io/kofun/test.html)
+
+## Data
+[3D Comparison of Three Major Tombs in Sakai City](https://www.city.sakai.lg.jp/kanko/rekishi/dkofun/3dhikaku/funbohikaku.html)
+
+## License
+MIT License
